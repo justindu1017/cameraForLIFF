@@ -1,11 +1,14 @@
-var express = require("express");
-var fs = require("fs");
-var cfenv = require("cfenv");
-var bodyParser = require("body-parser");
-var app = express();
+const express = require("express");
+const fs = require("fs");
+const cfenv = require("cfenv");
+const bodyParser = require("body-parser");
+const app = express();
 const ffmpeg = require("fluent-ffmpeg");
-
-var stream = require("stream");
+const streamBuffers = require("stream-buffers");
+const stream = require("stream");
+const { resolve } = require("path");
+const { reject } = require("delay");
+const { on } = require("events");
 
 app.use(bodyParser.json());
 
@@ -35,7 +38,12 @@ app.use(function (req, res, next) {
 });
 
 // serve the files out of ./public as our main files
-// app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + "/public"));
+
+// // for file listing
+// app.post("/getImg", (req, res) => {
+//   res.json();
+// });
 
 app.post("/test", authProcess, (req, res) => {
   // when get data,
@@ -47,57 +55,57 @@ app.post("/test", authProcess, (req, res) => {
   let data = new Buffer.from("");
 
   req.on("data", (chunk) => {
-    console.log("You received a chunk of data", chunk);
+    console.log("you got ", chunk);
     data = Buffer.concat([data, chunk]);
-    // data = chunk;
   });
-
   req.on("end", () => {
-    console.log(data);
+    console.log("in end");
     try {
-      fs.appendFileSync(
-        __dirname + "/public/videos/" + newFileName() + ".webm",
-        data
-      );
+      let readableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
+        initialSize: 100 * 1024, // start at 100 kilobytes.
+        incrementAmount: 10 * 1024, // grow by 10 kilobytes each time buffer overflows.
+      });
+
+      readableStreamBuffer.put(data);
+      readableStreamBuffer.stop();
+
+      let fName = newFileName();
+      toMP4(readableStreamBuffer, fName).then(() => {
+        res.json({ res: "OKK" });
+      });
     } catch (error) {
       console.log("err with ", error);
     }
-
-    res.end();
   });
 });
 
-app.post("/testStream", authProcess, (req, res) => {
-  // when get data,
-  // the data variable will concat the receiving datas
-  // due to the limitation of browser, if the data size
-  // is larger than 68486(approximately 8MB),
-  // the data will be chopped into several small data which
-  // has the maximum size of 68486(i think is the browser, brcause EDGE and Firefox show different limitation)
-  let data = new Buffer.from("");
+function toMP4(readableStreamBuffer, fName) {
+  return new Promise((resolve, reject) => {
+    // ffmpeg(readableStreamBuffer)
+    //   .outputOptions([
+    //     "-movflags frag_keyframe+empty_moov",
+    //     "-movflags +faststart",
+    //   ])
+    //   .toFormat("mp4")
+    //   .output(__dirname + "/public/videos/" + fName + ".mp4")
+    //   .run();
 
-  req.on("data", (chunk) => {
-    console.log("You received a chunk of data", chunk);
-    data = Buffer.concat([data, chunk]);
-    // ffmpeg(data).output("fff.mp4").run();
-
-    // data = chunk;
+    ffmpeg(readableStreamBuffer)
+      .outputOptions([
+        "-movflags frag_keyframe+empty_moov",
+        "-movflags +faststart",
+      ])
+      .toFormat("mp4")
+      .save(__dirname + "/public/videos/" + fName + ".mp4")
+      .on("end", () => {
+        console.log(`Video rendered`);
+        return resolve();
+      })
+      .on("error", (err) => {
+        return reject();
+      });
   });
-
-  req.on("end", () => {
-    console.log(data);
-    try {
-      fs.appendFileSync(
-        __dirname + "/public/videos/" + newFileName() + ".webm",
-        data
-      );
-    } catch (error) {
-      console.log("err with ", error);
-    }
-
-    res.end();
-  });
-});
+}
 
 // get the app environment from Cloud Foundry
 var appEnv = cfenv.getAppEnv();
@@ -134,6 +142,6 @@ function newFileName() {
 
   const fName =
     year + "-" + manth + "-" + date + "_" + hour + "-" + minute + "-" + second;
-  console.log("created fName..." + fName);
+  // console.log("created fName..." + fName);
   return fName;
 }
