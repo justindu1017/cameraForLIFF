@@ -9,41 +9,50 @@ const stream = require("stream");
 const { resolve } = require("path");
 const { reject } = require("delay");
 const { on } = require("events");
+const cors = require("cors");
 
 app.use(bodyParser.json());
-
+app.use(cors());
 // to avoid CROS
-app.use(function (req, res, next) {
-  // Website you wish to allow to connect
-  res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
+// app.use(function (req, res, next) {
+//   // Website you wish to allow to connect
+//   res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
 
-  // Request methods you wish to allow
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, OPTIONS, PUT, PATCH, DELETE"
-  );
+//   // Request methods you wish to allow
+//   res.setHeader(
+//     "Access-Control-Allow-Methods",
+//     "GET, POST, OPTIONS, PUT, PATCH, DELETE"
+//   );
 
-  // Request headers you wish to allow
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "X-Requested-With,content-type,authcode"
-  );
+//   // Request headers you wish to allow
+//   res.setHeader(
+//     "Access-Control-Allow-Headers",
+//     "X-Requested-With,content-type,authcode"
+//   );
 
-  // Set to true if you need the website to include cookies in the requests sent
-  // to the API (e.g. in case you use sessions)
-  res.setHeader("Access-Control-Allow-Credentials", true);
+//   // Set to true if you need the website to include cookies in the requests sent
+//   // to the API (e.g. in case you use sessions)
+//   res.setHeader("Access-Control-Allow-Credentials", true);
 
-  // Pass to next layer of middleware
-  next();
-});
+//   // Pass to next layer of middleware
+//   next();
+// });
 
 // serve the files out of ./public as our main files
 app.use(express.static(__dirname + "/public"));
 
 // // for file listing
-// app.post("/getImg", (req, res) => {
-//   res.json();
-// });
+app.post("/getImg", (req, res) => {
+  const dirForVideo = __dirname + "/videos";
+  let fileStatus = {};
+  fs.readdir(dirForVideo, (err, files) => {
+    for (var file in files) {
+      fs.statSync(dirForVideo + "/" + file);
+    }
+    // res.send(files);
+  });
+  // console.log("the files are...", files);
+});
 
 app.post("/test", authProcess, (req, res) => {
   // when get data,
@@ -62,8 +71,8 @@ app.post("/test", authProcess, (req, res) => {
     console.log("in end");
     try {
       let readableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
-        initialSize: 100 * 1024, // start at 100 kilobytes.
-        incrementAmount: 10 * 1024, // grow by 10 kilobytes each time buffer overflows.
+        initialSize: 10 * 1024,
+        incrementAmount: 10 * 512,
       });
 
       readableStreamBuffer.put(data);
@@ -81,22 +90,13 @@ app.post("/test", authProcess, (req, res) => {
 
 function toMP4(readableStreamBuffer, fName) {
   return new Promise((resolve, reject) => {
-    // ffmpeg(readableStreamBuffer)
-    //   .outputOptions([
-    //     "-movflags frag_keyframe+empty_moov",
-    //     "-movflags +faststart",
-    //   ])
-    //   .toFormat("mp4")
-    //   .output(__dirname + "/public/videos/" + fName + ".mp4")
-    //   .run();
-
     ffmpeg(readableStreamBuffer)
       .outputOptions([
         "-movflags frag_keyframe+empty_moov",
         "-movflags +faststart",
       ])
       .toFormat("mp4")
-      .save(__dirname + "/public/videos/" + fName + ".mp4")
+      .save(__dirname + "/videos/" + fName + ".mp4")
       .on("end", () => {
         console.log(`Video rendered`);
         return resolve();
