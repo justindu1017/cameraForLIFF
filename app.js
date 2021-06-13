@@ -10,6 +10,7 @@ const { resolve } = require("path");
 const { reject } = require("delay");
 const { on } = require("events");
 const cors = require("cors");
+const dateFormatter = require("./dateFormatter.js");
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -40,18 +41,23 @@ app.use(cors());
 
 // serve the files out of ./public as our main files
 app.use(express.static(__dirname + "/public"));
+app.use("/videos", express.static(__dirname + "/videos"));
 
 // // for file listing
 app.post("/getImg", (req, res) => {
   const dirForVideo = __dirname + "/videos";
-  let fileStatus = {};
+  let returnArr = [];
   fs.readdir(dirForVideo, (err, files) => {
-    for (var file in files) {
-      fs.statSync(dirForVideo + "/" + file);
+    for (var file of files) {
+      const status = fs.statSync(dirForVideo + "/" + file);
+      const disDate = new dateFormatter(status.mtime);
+      const fileInfo = {};
+      fileInfo.fileName = file;
+      fileInfo.lastModifiedTime = disDate.displayToSecond();
+      returnArr.push(fileInfo);
     }
-    // res.send(files);
+    res.json(returnArr);
   });
-  // console.log("the files are...", files);
 });
 
 app.post("/test", authProcess, (req, res) => {
@@ -134,14 +140,24 @@ function authProcess(req, res, next) {
 function newFileName() {
   const nowDate = new Date();
   const year = nowDate.getFullYear();
-  const manth = nowDate.getMonth();
+  const month = nowDate.getMonth();
   const date = nowDate.getDate();
   const hour = nowDate.getHours();
   const minute = nowDate.getMinutes();
   const second = nowDate.getSeconds();
 
   const fName =
-    year + "-" + manth + "-" + date + "_" + hour + "-" + minute + "-" + second;
+    year +
+    "-" +
+    (month + 1) +
+    "-" +
+    date +
+    "_" +
+    hour +
+    "-" +
+    minute +
+    "-" +
+    second;
   // console.log("created fName..." + fName);
   return fName;
 }

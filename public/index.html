@@ -24,13 +24,49 @@
 
     <title>影片總覽</title>
   </head>
-  <body>
-    cccc
+  <body class="container-fluid">
+    <div id="mainDiv">
+      <table class="table  table-striped" id="table ">
+        <thead>
+          <tr>
+            <th>影片名稱</th>
+            <th>影片最終修改日</th>
+          </tr>
+          <tbody id="tbody">
+
+          </tbody>
+        </thead>
+      </table>
+    </div>
   </body>
 
   <script>
     $(document).ready(function () {
-      axios.post("/getImg");
+      axios
+        .post("/getImg")
+        .then((res) => {
+          console.log(res.data);
+          for (let obj of res.data) {
+            let tr = document.createElement("tr");
+            let tdFilename = document.createElement("td");
+            let tdFiledate = document.createElement("td");
+            let a = document.createElement("a");
+            a.textContent = obj.fileName;
+            a.href = "/videos/" + obj.fileName;
+
+            tdFilename.appendChild(a);
+            tdFiledate.append(obj.lastModifiedTime);
+            tr.appendChild(tdFilename);
+            tr.appendChild(tdFiledate);
+
+            document.getElementById("tbody").appendChild(tr);
+
+          }
+        })
+        .catch((err) => {
+          alert("無法正常取得列表!!!!!");
+          console.log("err...", err);
+        });
     });
   </script>
 </html>
