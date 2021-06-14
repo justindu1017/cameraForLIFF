@@ -55,11 +55,16 @@ app.use(bodyParser.json());
 
 // serve the files out of ./public as our main files
 app.use(express.static(__dirname + "/public"));
-app.use("/videos", express.static(__dirname + "/videos"));
+app.use("/backend", express.static(__dirname + "/backend"));
+app.use("/backend/videos", express.static(__dirname + "backend/videos"));
+
+app.get("/test", (req, res) => {
+  res.send("YOYOYOYOYOYOYOYOYO");
+});
 
 // // for file listing
-app.post("/getImg", (req, res) => {
-  const dirForVideo = __dirname + "/videos";
+app.post("/getList", (req, res) => {
+  const dirForVideo = __dirname + "/backend/videos";
   let returnArr = [];
   fs.readdir(dirForVideo, (err, files) => {
     for (var file of files) {
@@ -73,6 +78,10 @@ app.post("/getImg", (req, res) => {
     res.json(returnArr);
   });
 });
+
+// app.post("/postStream", (req, res) => {
+//   res.send("postStream ok!");
+// });
 
 app.post("/postStream", (req, res) => {
   // when get data,
@@ -99,9 +108,13 @@ app.post("/postStream", (req, res) => {
       readableStreamBuffer.stop();
 
       let fName = newFileName();
-      toMP4(readableStreamBuffer, fName).then(() => {
-        res.json({ res: "OKK" });
-      });
+      toMP4(readableStreamBuffer, fName)
+        .then(() => {
+          res.json({ status: "success" });
+        })
+        .catch((err) => {
+          console.log("err toMp4 Reject", err);
+        });
     } catch (error) {
       console.log("err with ", error);
     }
@@ -116,7 +129,7 @@ function toMP4(readableStreamBuffer, fName) {
         "-movflags +faststart",
       ])
       .toFormat("mp4")
-      .save(__dirname + "/videos/" + fName + ".mp4")
+      .save(__dirname + "/backend/videos/" + fName + ".mp4")
       .on("end", () => {
         console.log(`Video rendered`);
         return resolve();
