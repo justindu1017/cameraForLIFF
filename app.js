@@ -135,7 +135,7 @@ function toMP4(readableStreamBuffer, fName) {
         return resolve();
       })
       .on("error", (err) => {
-        return reject();
+        return reject(err);
       });
   });
 }
