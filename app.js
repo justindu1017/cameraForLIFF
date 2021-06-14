@@ -16,7 +16,13 @@ const dateFormatter = require("./dateFormatter.js");
 // };
 
 // app.use(cors(corsOptions));
-app.use(cors());
+app.use(
+  cors({
+    enable_cors: true,
+    allow_credentials: true,
+    origins: ["*"],
+  })
+);
 
 app.use(bodyParser.json());
 // to avoid CROS
