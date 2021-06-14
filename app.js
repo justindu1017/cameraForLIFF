@@ -6,18 +6,26 @@ const app = express();
 const ffmpeg = require("fluent-ffmpeg");
 const streamBuffers = require("stream-buffers");
 const stream = require("stream");
-const { resolve } = require("path");
-const { reject } = require("delay");
-const { on } = require("events");
 const cors = require("cors");
 const dateFormatter = require("./dateFormatter.js");
 
-app.use(bodyParser.json());
+// const corsOptions = {
+//   origin: ["https://duduwebcrttest.us-south.cf.appdomain.cloud/"],
+//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+//   allowedHeaders: ["Content-Type", "Authorization"],
+// };
+
+// app.use(cors(corsOptions));
 app.use(cors());
+
+app.use(bodyParser.json());
 // to avoid CROS
 // app.use(function (req, res, next) {
 //   // Website you wish to allow to connect
-//   res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
+//   res.setHeader(
+//     "Access-Control-Allow-Origin",
+//     "https://duduwebcrttest.us-south.cf.appdomain.cloud/"
+//   );
 
 //   // Request methods you wish to allow
 //   res.setHeader(
@@ -28,7 +36,7 @@ app.use(cors());
 //   // Request headers you wish to allow
 //   res.setHeader(
 //     "Access-Control-Allow-Headers",
-//     "X-Requested-With,content-type,authcode"
+//     "X-Requested-With,content-type"
 //   );
 
 //   // Set to true if you need the website to include cookies in the requests sent
@@ -60,7 +68,7 @@ app.post("/getImg", (req, res) => {
   });
 });
 
-app.post("/test", authProcess, (req, res) => {
+app.post("/postStream", (req, res) => {
   // when get data,
   // the data variable will concat the receiving datas
   // due to the limitation of browser, if the data size
@@ -126,14 +134,15 @@ app.listen(appEnv.port, "0.0.0.0", function () {
 // looking for cert in header
 function authProcess(req, res, next) {
   let authCode = req.headers.authcode;
+  next();
 
-  if (authCode === "fromLine") {
-    console.log("auth pass");
-    next();
-  } else {
-    res.status(401);
-    res.send("還敢亂打阿冰鳥");
-  }
+  // if (authCode === "fromLine") {
+  //   console.log("auth pass");
+  //   next();
+  // } else {
+  //   res.status(401);
+  //   res.send("還敢亂打阿冰鳥");
+  // }
 }
 
 // the function to create the name of the video get from request body

@@ -2,7 +2,7 @@ applications:
   - path: .
     name: cameraLIFFTest
     environment_json: {}
-    memory: 64M
+    memory: 128M
     instances: 1
     disk_quota: 1024M
     services: []
