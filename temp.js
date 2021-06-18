@@ -1,26 +1,9 @@
-function test2(num) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      console.log(num);
-      resolve();
-    }, 3000);
-  });
-}
+const { exec } = require("child_process");
 
-function testFunc() {
-  return new Promise((resolve, reject) => {
-    console.log("1");
-    console.log("2");
-    console.log("3");
-    console.log("4");
-
-    test2(5).then(() => {
-      console.log("6");
-      resolve("OKK");
-    });
-  });
-}
-
-testFunc().then((res) => {
-  console.log(res);
-});
+exec(
+  "ffmpeg -i C:\\Users\\Jacques_Du\\Desktop\\CODE\\IBM\\cameraLIFFTest-master\\backend\\videos\\2021-6-15_0-46-42.mp4 C:\\Users\\Jacques_Du\\Desktop\\CODE\\IBM\\cameraLIFFTest-master\\backend\\videos\\2021.avi",
+  (err, stdout, stderr) => {
+    console.log(err);
+    // console.log(stderr);
+  }
+);
