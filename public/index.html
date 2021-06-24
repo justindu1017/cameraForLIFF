@@ -28,7 +28,13 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <!-- <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.14/vue.min.js"
+      integrity="sha512-XdUZ5nrNkVySQBnnM5vzDqHai823Spoq1W3pJoQwomQja+o4Nw0Ew1ppxo5bhF2vMug6sfibhKWcNJsG8Vj9tg=="
+      crossorigin="anonymous"
+    ></script> -->
+    <!-- <script src="js/vue.js"></script> -->
     <link rel="stylesheet" href="stylesheets/style.css" />
     <title>dudududu~~~</title>
   </head>
@@ -59,12 +65,10 @@
           </button>
         </div>
       </div>
-      <ul>
-        <li id="as"></li>
-      </ul>
+      <input id="_csrf" type="hidden" value="<%= csrfToken %>" />
     </div>
-    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-
     <script src="js/main.js"></script>
+
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   </body>
 </html>

@@ -2,88 +2,47 @@ const express = require("express");
 const fs = require("fs");
 const cfenv = require("cfenv");
 const bodyParser = require("body-parser");
-const app = express();
 const ffmpeg = require("fluent-ffmpeg");
 const streamBuffers = require("stream-buffers");
 const stream = require("stream");
-const cors = require("cors");
+const ejs = require("ejs");
+const helmet = require("helmet");
+const csrf = require("csurf");
+const cookieParser = require("cookie-parser");
 const dateFormatter = require("./dateFormatter.js");
+const app = express();
 
-// const corsOptions = {
-//   origin: ["https://duduwebcrttest.us-south.cf.appdomain.cloud/"],
-//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-//   allowedHeaders: ["Content-Type", "Authorization"],
-// };
+var csrfProtection = csrf({ cookie: true });
+var parseForm = bodyParser.urlencoded({ extended: false });
 
-// app.use(cors(corsOptions));
 app.use(
-  cors({
-    enable_cors: true,
-    allow_credentials: true,
-    origins: ["*"],
+  helmet({
+    contentSecurityPolicy: false,
   })
 );
 
+app.use(cookieParser());
+
 app.use(bodyParser.json());
-// to avoid CROS
-// app.use(function (req, res, next) {
-//   // Website you wish to allow to connect
-//   res.setHeader(
-//     "Access-Control-Allow-Origin",
-//     "https://duduwebcrttest.us-south.cf.appdomain.cloud/"
-//   );
-
-//   // Request methods you wish to allow
-//   res.setHeader(
-//     "Access-Control-Allow-Methods",
-//     "GET, POST, OPTIONS, PUT, PATCH, DELETE"
-//   );
-
-//   // Request headers you wish to allow
-//   res.setHeader(
-//     "Access-Control-Allow-Headers",
-//     "X-Requested-With,content-type"
-//   );
-
-//   // Set to true if you need the website to include cookies in the requests sent
-//   // to the API (e.g. in case you use sessions)
-//   res.setHeader("Access-Control-Allow-Credentials", true);
-
-//   // Pass to next layer of middleware
-//   next();
-// });
 
 // serve the files out of ./public as our main files
-app.use(express.static(__dirname + "/public"));
+app.use("/js", express.static(__dirname + "/public/js"));
+app.use("/stylesheets", express.static(__dirname + "/public/stylesheets"));
+
 app.use("/backend", express.static(__dirname + "/backend"));
-app.use("/backend/videos", express.static(__dirname + "backend/videos"));
+// app.use("/backend/videos", express.static(__dirname + "backend/videos"));
 
-app.get("/test", (req, res) => {
-  res.send("YOYOYOYOYOYOYOYOYO");
-});
+// testing with render engine
+app.engine("html", ejs.renderFile);
+app.set("view engine", "html");
 
-// // for file listing
-app.post("/getList", (req, res) => {
-  const dirForVideo = __dirname + "/backend/videos";
-  let returnArr = [];
-  fs.readdir(dirForVideo, (err, files) => {
-    for (var file of files) {
-      const status = fs.statSync(dirForVideo + "/" + file);
-      const disDate = new dateFormatter(status.mtime);
-      const fileInfo = {};
-      fileInfo.fileName = file;
-      fileInfo.lastModifiedTime = disDate.displayToSecond();
-      returnArr.push(fileInfo);
-    }
-    res.json(returnArr);
+app.get("/", csrfProtection, (req, res) => {
+  res.render(__dirname + "/public/index.html", {
+    csrfToken: req.csrfToken(),
   });
 });
 
-// app.post("/postStream", (req, res) => {
-//   res.send("postStream ok!");
-// });
-
-app.post("/postStream", (req, res) => {
+app.post("/postStream", csrfProtection, (req, res) => {
   // when get data,
   // the data variable will concat the receiving datas
   // due to the limitation of browser, if the data size
@@ -121,24 +80,22 @@ app.post("/postStream", (req, res) => {
   });
 });
 
-function toMP4(readableStreamBuffer, fName) {
-  return new Promise((resolve, reject) => {
-    ffmpeg(readableStreamBuffer)
-      .outputOptions([
-        "-movflags frag_keyframe+empty_moov",
-        "-movflags +faststart",
-      ])
-      .toFormat("mp4")
-      .save(__dirname + "/backend/videos/" + fName + ".mp4")
-      .on("end", () => {
-        console.log(`Video rendered`);
-        return resolve();
-      })
-      .on("error", (err) => {
-        return reject(err);
-      });
+// for file listing
+app.post("/getList", (req, res) => {
+  const dirForVideo = __dirname + "/backend/videos";
+  let returnArr = [];
+  fs.readdir(dirForVideo, (err, files) => {
+    for (var file of files) {
+      const status = fs.statSync(dirForVideo + "/" + file);
+      const disDate = new dateFormatter(status.mtime);
+      const fileInfo = {};
+      fileInfo.fileName = file;
+      fileInfo.lastModifiedTime = disDate.displayToSecond();
+      returnArr.push(fileInfo);
+    }
+    res.json(returnArr);
   });
-}
+});
 
 // get the app environment from Cloud Foundry
 var appEnv = cfenv.getAppEnv();
@@ -148,21 +105,6 @@ app.listen(appEnv.port, "0.0.0.0", function () {
   // print a message when the server starts listening
   console.log("server starting on " + appEnv.url);
 });
-
-// the auth process
-// looking for cert in header
-function authProcess(req, res, next) {
-  let authCode = req.headers.authcode;
-  next();
-
-  // if (authCode === "fromLine") {
-  //   console.log("auth pass");
-  //   next();
-  // } else {
-  //   res.status(401);
-  //   res.send("還敢亂打阿冰鳥");
-  // }
-}
 
 // the function to create the name of the video get from request body
 function newFileName() {
@@ -188,4 +130,23 @@ function newFileName() {
     second;
   // console.log("created fName..." + fName);
   return fName;
+}
+
+function toMP4(readableStreamBuffer, fName) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(readableStreamBuffer)
+      .outputOptions([
+        "-movflags frag_keyframe+empty_moov",
+        "-movflags +faststart",
+      ])
+      .toFormat("mp4")
+      .save(__dirname + "/backend/videos/" + fName + ".mp4")
+      .on("end", () => {
+        console.log(`Video rendered`);
+        return resolve();
+      })
+      .on("error", (err) => {
+        return reject(err);
+      });
+  });
 }

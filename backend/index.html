@@ -52,7 +52,7 @@
             let tdFiledate = document.createElement("td");
             let a = document.createElement("a");
             a.textContent = obj.fileName;
-            a.href = "backend/videos/" + obj.fileName;
+            a.href = "./videos/" + obj.fileName;
 
             tdFilename.appendChild(a);
             tdFiledate.append(obj.lastModifiedTime);
