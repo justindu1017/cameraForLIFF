@@ -21,6 +21,29 @@ app.use(
   })
 );
 
+app.use(
+  helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+      "script-src": [
+        "'self'",
+        "'unsafe-eval'",
+        "https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js",
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js",
+        "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js",
+        "https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js",
+        "https://webrtc.github.io/adapter/adapter-latest.js",
+      ],
+      "style-src": [
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css",
+        "'self'",
+      ],
+    },
+    // reportOnly: true,
+  })
+);
+
 app.use(cookieParser());
 
 app.use(bodyParser.json());
