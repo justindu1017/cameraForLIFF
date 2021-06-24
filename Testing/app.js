@@ -14,7 +14,7 @@ var app = express();
 // parse cookies
 // we need this because "cookie" is true in csrfProtection
 app.use(cookieParser());
-
+// testing for csrfProtection
 app.get("/form", csrfProtection, function (req, res) {
   // pass the csrfToken to the view
   res.send({ csrfToken: req.csrfToken() });
