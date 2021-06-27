@@ -1,7 +1,7 @@
 const { exec } = require("child_process");
 
-exec("dir", (err, stdout, stderr) => {
-  console.log(stdout);
+exec("ffmpeg", (err, stdout, stderr) => {
+  console.log(stderr);
 });
 
 // testfun();

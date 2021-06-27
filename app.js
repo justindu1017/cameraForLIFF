@@ -192,31 +192,15 @@ function noFFmpegInstalled(data, fName) {
         else {
           try {
             exec(
-              `./ffmpeg ffmpeg -i ${fName}.webm ${fName}.mp4`,
+              `./ffmpeg -i ${__dirname}/backend/videos/${fName}.webm ${__dirname}/backend/videos/${fName}.mp4`,
               (err, stdout, stderr) => {
-                if (stdout) {
-                  console.log("deleting...");
-                  exec(
-                    `rm ${__dirname}/backend/videos/${fName}.webm`,
-                    (err, stdout, stderr) => {
-                      if (stdout) {
-                        resolve();
-                      } else if (stderr) {
-                        console.log("stderr!!! " + stderr);
-                        reject(stderr);
-                      } else if (err) {
-                        console.log("err!!! " + err);
-                        reject(err);
-                      }
-                    }
-                  );
-                } else if (stderr) {
-                  console.log("stderr!!! " + stderr);
-                  reject(stderr);
-                } else if (err) {
-                  console.log("err!!! " + err);
-                  reject(err);
-                }
+                console.log("deleting...");
+                exec(
+                  `rm ${__dirname}/backend/videos/${fName}.webm`,
+                  (err, stdout, stderr) => {
+                    resolve();
+                  }
+                );
               }
             );
           } catch (err) {
