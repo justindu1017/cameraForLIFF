@@ -44,7 +44,7 @@ $(function () {
             axios
               .post(
                 // "https://cameralifftest.us-south.cf.appdomain.cloud/postStream",
-                "http://localhost:6003/postStream",
+                "http://localhost:8080/postStream",
 
                 this.reqInfo,
                 {

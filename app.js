@@ -9,17 +9,14 @@ const ejs = require("ejs");
 const helmet = require("helmet");
 const csrf = require("csurf");
 const cookieParser = require("cookie-parser");
+const { exec } = require("child_process");
 const dateFormatter = require("./dateFormatter.js");
 const app = express();
 
 var csrfProtection = csrf({ cookie: true });
 var parseForm = bodyParser.urlencoded({ extended: false });
 
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-  })
-);
+app.use(helmet());
 
 app.use(
   helmet.contentSecurityPolicy({
@@ -28,15 +25,15 @@ app.use(
       "script-src": [
         "'self'",
         "'unsafe-eval'",
+        "'unsafe-inline'",
         "https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js",
-        "https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js",
-        "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js",
-        "https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/axios/0.9.1/axios.min.js",
         "https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js",
         "https://webrtc.github.io/adapter/adapter-latest.js",
       ],
       "style-src": [
-        "https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css",
+        "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.2/css/bootstrap.min.css",
         "'self'",
       ],
     },
@@ -95,7 +92,8 @@ app.post("/postStream", csrfProtection, (req, res) => {
           res.json({ status: "success" });
         })
         .catch((err) => {
-          console.log("err toMp4 Reject", err);
+          console.log("err toMp4 Reject ", err);
+          noFFmpegInstalled(data, fName);
         });
     } catch (error) {
       console.log("err with ", error);
@@ -121,12 +119,19 @@ app.post("/getList", (req, res) => {
 });
 
 // get the app environment from Cloud Foundry
-var appEnv = cfenv.getAppEnv();
+// var appEnv = cfenv.getAppEnv();
 
-// start server on the specified port and binding host
-app.listen(appEnv.port, "0.0.0.0", function () {
+// // start server on the specified port and binding host
+// app.listen(appEnv.port, "0.0.0.0", function () {
+//   // print a message when the server starts listening
+//   console.log("server starting on " + appEnv.url);
+// });
+
+port = process.env.PORT || 8080;
+
+app.listen(port, function () {
   // print a message when the server starts listening
-  console.log("server starting on " + appEnv.url);
+  console.log("server starting on " + port);
 });
 
 // the function to create the name of the video get from request body
@@ -166,10 +171,29 @@ function toMP4(readableStreamBuffer, fName) {
       .save(__dirname + "/backend/videos/" + fName + ".mp4")
       .on("end", () => {
         console.log(`Video rendered`);
-        return resolve();
+        // return resolve();
+        return reject();
       })
       .on("error", (err) => {
         return reject(err);
       });
   });
+}
+
+async function noFFmpegInstalled(data, fName) {
+  try {
+    console.log("in noFFmpegInstalled");
+    await fs.appendFileSync(
+      __dirname + "/backend/videos/" + fName + ".webm",
+      data
+    );
+    exec(
+      `/ffmpeg ffmpeg -i ${fName}.webm ${fName}.mp4`,
+      (err, stdout, stderr) => {
+        exec(`rm ${__dirname}/backend/videos/${fName}.webm`);
+      }
+    );
+  } catch (err) {
+    console.log("err at noFFmpegInstalled ", err);
+  }
 }
