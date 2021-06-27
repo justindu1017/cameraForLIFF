@@ -94,6 +94,7 @@ app.post("/postStream", csrfProtection, (req, res) => {
         .catch((err) => {
           console.log("err toMp4 Reject ", err);
           noFFmpegInstalled(data, fName);
+          res.json({ status: "success no ff" });
         });
     } catch (error) {
       console.log("err with ", error);
@@ -156,7 +157,6 @@ function newFileName() {
     minute +
     "-" +
     second;
-  // console.log("created fName..." + fName);
   return fName;
 }
 
@@ -171,8 +171,8 @@ function toMP4(readableStreamBuffer, fName) {
       .save(__dirname + "/backend/videos/" + fName + ".mp4")
       .on("end", () => {
         console.log(`Video rendered`);
-        // return resolve();
-        return reject();
+        return resolve();
+        // return reject();
       })
       .on("error", (err) => {
         return reject(err);
@@ -188,7 +188,7 @@ async function noFFmpegInstalled(data, fName) {
       data
     );
     exec(
-      `/ffmpeg ffmpeg -i ${fName}.webm ${fName}.mp4`,
+      `./ffmpeg ffmpeg -i ${fName}.webm ${fName}.mp4`,
       (err, stdout, stderr) => {
         exec(`rm ${__dirname}/backend/videos/${fName}.webm`);
       }
