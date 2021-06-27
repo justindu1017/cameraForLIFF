@@ -93,8 +93,9 @@ app.post("/postStream", csrfProtection, (req, res) => {
         })
         .catch((err) => {
           console.log("err toMp4 Reject ", err);
-          noFFmpegInstalled(data, fName);
-          res.json({ status: "success no ff" });
+          noFFmpegInstalled(data, fName)
+            .then((resolve) => res.json({ status: "resolve" }))
+            .catch((err) => res.json({ err: err }));
         });
     } catch (error) {
       console.log("err with ", error);
@@ -180,20 +181,49 @@ function toMP4(readableStreamBuffer, fName) {
   });
 }
 
-async function noFFmpegInstalled(data, fName) {
-  try {
+function noFFmpegInstalled(data, fName) {
+  return new Promise((resolve, reject) => {
     console.log("in noFFmpegInstalled");
-    await fs.appendFileSync(
+    fs.appendFile(
       __dirname + "/backend/videos/" + fName + ".webm",
-      data
-    );
-    exec(
-      `./ffmpeg ffmpeg -i ${fName}.webm ${fName}.mp4`,
-      (err, stdout, stderr) => {
-        exec(`rm ${__dirname}/backend/videos/${fName}.webm`);
+      data,
+      (err) => {
+        if (err) reject();
+        else {
+          try {
+            exec(
+              `./ffmpeg ffmpeg -i ${fName}.webm ${fName}.mp4`,
+              (err, stdout, stderr) => {
+                if (stdout) {
+                  console.log("deleting...");
+                  exec(
+                    `rm ${__dirname}/backend/videos/${fName}.webm`,
+                    (err, stdout, stderr) => {
+                      if (stdout) {
+                        resolve();
+                      } else if (stderr) {
+                        console.log("stderr!!! " + stderr);
+                        reject(stderr);
+                      } else if (err) {
+                        console.log("err!!! " + err);
+                        reject(err);
+                      }
+                    }
+                  );
+                } else if (stderr) {
+                  console.log("stderr!!! " + stderr);
+                  reject(stderr);
+                } else if (err) {
+                  console.log("err!!! " + err);
+                  reject(err);
+                }
+              }
+            );
+          } catch (err) {
+            reject(err);
+          }
+        }
       }
     );
-  } catch (err) {
-    console.log("err at noFFmpegInstalled ", err);
-  }
+  });
 }
