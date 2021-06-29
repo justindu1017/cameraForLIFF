@@ -81,7 +81,7 @@ app.post("/postStream", csrfProtection, (req, res) => {
     console.log("in end");
     try {
       let readableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
-        initialSize: 10 * 1024,
+        initialSize: 10 * 512,
         incrementAmount: 10 * 512,
       });
 
