@@ -1,5 +1,6 @@
 const express = require("express");
 const fs = require("fs");
+const { unlink } = require("fs/promises");
 const cfenv = require("cfenv");
 const bodyParser = require("body-parser");
 const ffmpeg = require("fluent-ffmpeg");
@@ -14,11 +15,17 @@ const dateFormatter = require("./dateFormatter.js");
 
 const app = express();
 
+//implement Cross-site request forgery protection
 var csrfProtection = csrf({ cookie: true });
+// inclued due to cookie: true in csrfProtection
+app.use(cookieParser());
+
 var parseForm = bodyParser.urlencoded({ extended: false });
 
+// implement helmet
 app.use(helmet());
-
+// to allow loading js and css file from local or cdn, must set the web address
+//  of the package in script-src and style-src
 app.use(
   helmet.contentSecurityPolicy({
     useDefaults: true,
@@ -36,14 +43,6 @@ app.use(
     // reportOnly: true,
   })
 );
-// var corsOptions = {
-//   origin: "http://localhost:8080",
-//   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
-// };
-
-// app.use(cors(corsOptions));
-
-app.use(cookieParser());
 
 app.use(bodyParser.json());
 
@@ -52,18 +51,21 @@ app.use("/js", express.static(__dirname + "/public/js"));
 app.use("/stylesheets", express.static(__dirname + "/public/stylesheets"));
 
 app.use("/backend", express.static(__dirname + "/backend"));
-// app.use("/backend/videos", express.static(__dirname + "backend/videos"));
 
-// testing with render engine
+// use ejs as render engine in order to render csrf on html dynamically
 app.engine("html", ejs.renderFile);
 app.set("view engine", "html");
 
+// the route to index.html
+// and randering csrfToken
 app.get("/", csrfProtection, (req, res) => {
   res.render(__dirname + "/public/index.html", {
     csrfToken: req.csrfToken(),
   });
 });
 
+// when user "stop" recording, the frontend call this api
+// in order to get the recorded video
 app.post("/postStream", csrfProtection, (req, res) => {
   // when get data,
   // the data variable will concat the receiving datas
@@ -76,41 +78,61 @@ app.post("/postStream", csrfProtection, (req, res) => {
   req.on("data", (chunk) => {
     console.log("you got ", chunk);
     data = Buffer.concat([data, chunk]);
+    // ready to pass to streamBuffers
   });
   req.on("end", () => {
     console.log("in end");
     try {
+      // initialize a new streamBuffers.ReadableStreamBuffer, which will later be user
+      // as input of fluent-ffmpeg
       let readableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
-        initialSize: 10 * 512,
+        // the initial size of the streamBuffer
+        initialSize: 10 * 1024,
+        // everytime the size of incoming data exceed
+        // current size of streamBuffer, the latter increase its size with 10*512
         incrementAmount: 10 * 512,
       });
 
+      // put the data into the streambuffer
       readableStreamBuffer.put(data);
       readableStreamBuffer.stop();
 
+      // initialize the filename of the mp4 file
       let fName = newFileName();
+      // call toMp4
       toMP4(readableStreamBuffer, fName)
         .then(() => {
           res.json({ status: "success" });
         })
         .catch((err) => {
+          // if something when wrong with fluent-ffmpeg
+          // will jump to catch and perform noFFmpegInstalled
           console.log("err toMp4 Reject ", err);
-          noFFmpegInstalled(data, fName)
-            .then((resolve) => res.json({ status: "resolve" }))
-            .catch((err) => res.json({ err: err }));
+
+          try {
+            noFFmpegInstalled(data, fName)
+              .then((resolve) => res.json({ status: resolve }))
+              .catch((err) => res.status(500).send(err));
+          } catch (error) {
+            console.log("err withh ", error.toString());
+            // res.status(500).send({ error: error.toString() });
+            res.status(500).send({ error: error.toString() });
+          }
         });
     } catch (error) {
       console.log("err with ", error);
+      res.status(500).send({ error: error.toString() });
     }
   });
 });
 
-// for file listing
+// for file listing in backend/index.html
 app.post("/getList", (req, res) => {
   const dirForVideo = __dirname + "/backend/videos";
   let returnArr = [];
   fs.readdir(dirForVideo, (err, files) => {
     for (var file of files) {
+      // making the list to return
       const status = fs.statSync(dirForVideo + "/" + file);
       const disDate = new dateFormatter(status.mtime);
       const fileInfo = {};
@@ -154,6 +176,8 @@ function newFileName() {
   return fName;
 }
 
+// the function that convert the streambuffer object
+// to mp4
 function toMP4(readableStreamBuffer, fName) {
   return new Promise((resolve, reject) => {
     ffmpeg(readableStreamBuffer)
@@ -174,6 +198,9 @@ function toMP4(readableStreamBuffer, fName) {
   });
 }
 
+// if ffmpeg is not installed or something when wrong
+// with toMP4, will perform noFFmpegInstalled, also
+// get the job done but much slower
 function noFFmpegInstalled(data, fName) {
   return new Promise((resolve, reject) => {
     console.log("in noFFmpegInstalled");
@@ -181,23 +208,20 @@ function noFFmpegInstalled(data, fName) {
       __dirname + "/backend/videos/" + fName + ".webm",
       data,
       (err) => {
-        if (err) reject();
+        if (err) reject(err);
         else {
           try {
             exec(
               `./ffmpeg -i ${__dirname}/backend/videos/${fName}.webm ${__dirname}/backend/videos/${fName}.mp4`,
               (err, stdout, stderr) => {
                 console.log("deleting...");
-                exec(
-                  `rm ${__dirname}/backend/videos/${fName}.webm`,
-                  (err, stdout, stderr) => {
-                    if (stdout) {
-                      resolve();
-                    } else {
-                      err ? reject(err) : reject(stderr);
-                    }
-                  }
-                );
+                unlink(`${__dirname}/backend/videos/${fName}.webm`)
+                  .then((res) => {
+                    resolve("succrss");
+                  })
+                  .catch((err) => {
+                    reject(err);
+                  });
               }
             );
           } catch (err) {

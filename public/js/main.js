@@ -55,12 +55,14 @@ $(function () {
                 this.isRecording = false;
               })
               .catch((err) => {
-                alert(err);
+                console.log("err", err);
+                alert("Oops...有地方出狀況了!");
                 this.isRecording = false;
               });
           })
           .catch((err) => {
             console.log(err);
+            alert("Oops...有地方出狀況了!");
           });
       },
 
