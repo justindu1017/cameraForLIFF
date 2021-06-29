@@ -4,13 +4,14 @@ const cfenv = require("cfenv");
 const bodyParser = require("body-parser");
 const ffmpeg = require("fluent-ffmpeg");
 const streamBuffers = require("stream-buffers");
-const stream = require("stream");
 const ejs = require("ejs");
 const helmet = require("helmet");
 const csrf = require("csurf");
 const cookieParser = require("cookie-parser");
 const { exec } = require("child_process");
+// const cors = require("cors");
 const dateFormatter = require("./dateFormatter.js");
+
 const app = express();
 
 var csrfProtection = csrf({ cookie: true });
@@ -22,24 +23,25 @@ app.use(
   helmet.contentSecurityPolicy({
     useDefaults: true,
     directives: {
+      // "connect-src": ["https://cameralifftest.us-south.cf.appdomain.cloud/"],
       "script-src": [
         "'self'",
         "'unsafe-eval'",
         "'unsafe-inline'",
-        "https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js",
-        "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
-        "https://cdnjs.cloudflare.com/ajax/libs/axios/0.9.1/axios.min.js",
-        "https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js",
-        "https://webrtc.github.io/adapter/adapter-latest.js",
+        "https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/",
+        "https://cdnjs.cloudflare.com/ajax/libs/",
       ],
-      "style-src": [
-        "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.2/css/bootstrap.min.css",
-        "'self'",
-      ],
+      "style-src": ["https://cdnjs.cloudflare.com/ajax/libs/", "'self'"],
     },
     // reportOnly: true,
   })
 );
+// var corsOptions = {
+//   origin: "http://localhost:8080",
+//   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+// };
+
+// app.use(cors(corsOptions));
 
 app.use(cookieParser());
 
@@ -120,15 +122,6 @@ app.post("/getList", (req, res) => {
   });
 });
 
-// get the app environment from Cloud Foundry
-// var appEnv = cfenv.getAppEnv();
-
-// // start server on the specified port and binding host
-// app.listen(appEnv.port, "0.0.0.0", function () {
-//   // print a message when the server starts listening
-//   console.log("server starting on " + appEnv.url);
-// });
-
 port = process.env.PORT || 8080;
 
 app.listen(port, function () {
@@ -198,7 +191,11 @@ function noFFmpegInstalled(data, fName) {
                 exec(
                   `rm ${__dirname}/backend/videos/${fName}.webm`,
                   (err, stdout, stderr) => {
-                    resolve();
+                    if (stdout) {
+                      resolve();
+                    } else {
+                      err ? reject(err) : reject(stderr);
+                    }
                   }
                 );
               }

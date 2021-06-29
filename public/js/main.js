@@ -1,9 +1,5 @@
-/* 關閉vue-devtools */
-Vue.config.devtools = true;
-
-/* 關閉錯誤警告 */
-Vue.config.debug = true;
-// Vue.config.devtools = true;
+Vue.config.devtools = false;
+Vue.config.debug = false;
 $(function () {
   console.log("ready!");
   var indexVue = new Vue({
@@ -31,7 +27,9 @@ $(function () {
         console.log("recording...");
         MediaRecorder.isTypeSupported("video/webm;codecs=h264")
           ? this.recordH264()
-          : this.recordVp8();
+          : MediaRecorder.isTypeSupported("video/webm;codecs=vp8")
+          ? this.recordVp8()
+          : this.recordMp4();
         this.isRecording = true;
       },
       stopRecord() {
@@ -43,8 +41,8 @@ $(function () {
 
             axios
               .post(
-                "https://cameralifftest.us-south.cf.appdomain.cloud/postStream",
-                // "http://localhost:8080/postStream",
+                // "https://cameralifftest.us-south.cf.appdomain.cloud/postStream",
+                "http://localhost:8080/postStream",
 
                 this.reqInfo,
                 {
@@ -75,6 +73,12 @@ $(function () {
       recordVp8() {
         this.recorder = new MediaRecorder(stream, {
           mimeType: "video/webm;codecs=vp8",
+        });
+        this.recorder.start();
+      },
+      recordMp4() {
+        this.recorder = new MediaRecorder(stream, {
+          mimeType: "video/webm;codecs=mp4",
         });
         this.recorder.start();
       },

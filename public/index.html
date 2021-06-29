@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script
+    <!-- <script
       src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"
       integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG"
       crossorigin="anonymous"
-    ></script>
+    ></script> -->
 
     <link
       rel="stylesheet"
@@ -64,7 +64,12 @@
       <input id="_csrf" type="hidden" value="<%= csrfToken %>" />
     </div>
     <script src="js/main.js"></script>
-
-    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.0.0/adapter.min.js"
+      integrity="sha512-j4toPJRj1AKj9lVyINsBDFG2BHf4DKQZHCpB0HhNW56FAKQuPCQXBimvbUUYJ1wkCaLoyGis43Np90Zje/o0vQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
   </body>
 </html>
