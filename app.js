@@ -76,7 +76,7 @@ app.post("/postStream", csrfProtection, (req, res) => {
   let data = new Buffer.from("");
 
   req.on("data", (chunk) => {
-    console.log("you got ", chunk);
+    // console.log("you got ", chunk);
     data = Buffer.concat([data, chunk]);
     // ready to pass to streamBuffers
   });
@@ -86,6 +86,7 @@ app.post("/postStream", csrfProtection, (req, res) => {
     let fName = newFileName();
 
     if (req.headers.isIOS) {
+      console.log("is IOS!!!");
       try {
         fs.appendFileSync(
           __dirname + "/backend/videos/" + fName + ".mp4",
