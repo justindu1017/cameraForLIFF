@@ -42,7 +42,7 @@ $(function () {
             axios
               .post(
                 // "https://cameralifftest.us-south.cf.appdomain.cloud/postStream",
-                "https://19697db8e6f8.ngrok.io/postStream",
+                "https://f481ff969d17.ngrok.io/postStream",
 
                 this.reqInfo,
                 {
