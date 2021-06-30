@@ -8,7 +8,7 @@ $(function () {
       isRecording: false,
       recorder: "",
       reqInfo: "",
-      isIos = ""
+      isIos: "",
     },
     methods: {
       promiseStopRecord() {
@@ -49,7 +49,7 @@ $(function () {
                 {
                   headers: {
                     "csrf-token": document.getElementById("_csrf").value,
-                    "isIos": this.isIos
+                    isIos: this.isIos,
                   },
                 }
               )
