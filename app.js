@@ -82,46 +82,60 @@ app.post("/postStream", csrfProtection, (req, res) => {
   });
   req.on("end", () => {
     console.log("in end");
-    try {
-      // initialize a new streamBuffers.ReadableStreamBuffer, which will later be user
-      // as input of fluent-ffmpeg
-      let readableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
-        // the initial size of the streamBuffer
-        initialSize: 10 * 1024,
-        // everytime the size of incoming data exceed
-        // current size of streamBuffer, the latter increase its size with 10*512
-        incrementAmount: 10 * 512,
-      });
+    // initialize the filename of the mp4 file
+    let fName = newFileName();
 
-      // put the data into the streambuffer
-      readableStreamBuffer.put(data);
-      readableStreamBuffer.stop();
-
-      // initialize the filename of the mp4 file
-      let fName = newFileName();
-      // call toMp4
-      toMP4(readableStreamBuffer, fName)
-        .then(() => {
-          res.json({ status: "success" });
-        })
-        .catch((err) => {
-          // if something when wrong with fluent-ffmpeg
-          // will jump to catch and perform noFFmpegInstalled
-          console.log("err toMp4 Reject ", err);
-
-          try {
-            noFFmpegInstalled(data, fName)
-              .then((resolve) => res.json({ status: resolve }))
-              .catch((err) => res.status(500).send(err));
-          } catch (error) {
-            console.log("err withh ", error.toString());
-            // res.status(500).send({ error: error.toString() });
-            res.status(500).send({ error: error.toString() });
-          }
+    if (req.headers.isIOS) {
+      try {
+        fs.appendFileSync(
+          __dirname + "/backend/videos/" + fName + ".mp4",
+          data
+        );
+        res.json({ status: "success" });
+      } catch (error) {
+        console.log("err with ", error);
+        res.status(500).send({ error: error.toString() });
+      }
+    } else {
+      try {
+        // initialize a new streamBuffers.ReadableStreamBuffer, which will later be user
+        // as input of fluent-ffmpeg
+        let readableStreamBuffer = new streamBuffers.ReadableStreamBuffer({
+          // the initial size of the streamBuffer
+          initialSize: 10 * 1024,
+          // everytime the size of incoming data exceed
+          // current size of streamBuffer, the latter increase its size with 10*512
+          incrementAmount: 10 * 512,
         });
-    } catch (error) {
-      console.log("err with ", error);
-      res.status(500).send({ error: error.toString() });
+
+        // put the data into the streambuffer
+        readableStreamBuffer.put(data);
+        readableStreamBuffer.stop();
+
+        // call toMp4
+        toMP4(readableStreamBuffer, fName)
+          .then(() => {
+            res.json({ status: "success" });
+          })
+          .catch((err) => {
+            // if something when wrong with fluent-ffmpeg
+            // will jump to catch and perform noFFmpegInstalled
+            console.log("err toMp4 Reject ", err);
+
+            try {
+              noFFmpegInstalled(data, fName)
+                .then((resolve) => res.json({ status: resolve }))
+                .catch((err) => res.status(500).send(err));
+            } catch (error) {
+              console.log("err withh ", error.toString());
+              // res.status(500).send({ error: error.toString() });
+              res.status(500).send({ error: error.toString() });
+            }
+          });
+      } catch (error) {
+        console.log("err with ", error);
+        res.status(500).send({ error: error.toString() });
+      }
     }
   });
 });

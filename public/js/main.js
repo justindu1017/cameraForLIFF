@@ -8,6 +8,7 @@ $(function () {
       isRecording: false,
       recorder: "",
       reqInfo: "",
+      isIos = ""
     },
     methods: {
       promiseStopRecord() {
@@ -48,6 +49,7 @@ $(function () {
                 {
                   headers: {
                     "csrf-token": document.getElementById("_csrf").value,
+                    "isIos": this.isIos
                   },
                 }
               )
@@ -70,20 +72,24 @@ $(function () {
         this.recorder = new MediaRecorder(stream, {
           mimeType: "video/webm;codecs=h264",
         });
+        this.isIos = "false";
+
         this.recorder.start();
       },
       recordVp8() {
         this.recorder = new MediaRecorder(stream, {
           mimeType: "video/webm;codecs=vp8",
         });
+        this.isIos = "false";
+
         this.recorder.start();
       },
       recordMp4() {
         try {
-          alert("STSU");
           this.recorder = new MediaRecorder(stream, {
             mimeType: "video/mp4",
           });
+          this.isIos = "true";
           this.recorder.start();
         } catch (error) {
           alert(error);
