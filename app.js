@@ -144,7 +144,7 @@ app.post("/getList", (req, res) => {
   });
 });
 
-port = process.env.PORT || 80;
+port = process.env.PORT || 8080;
 
 app.listen(port, function () {
   // print a message when the server starts listening
