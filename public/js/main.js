@@ -42,7 +42,7 @@ $(function () {
             axios
               .post(
                 // "https://cameralifftest.us-south.cf.appdomain.cloud/postStream",
-                "http://localhost:8080/postStream",
+                "https://19697db8e6f8.ngrok.io/postStream",
 
                 this.reqInfo,
                 {
@@ -79,10 +79,15 @@ $(function () {
         this.recorder.start();
       },
       recordMp4() {
-        this.recorder = new MediaRecorder(stream, {
-          mimeType: "video/webm;codecs=mp4",
-        });
-        this.recorder.start();
+        try {
+          alert("STSU");
+          this.recorder = new MediaRecorder(stream, {
+            mimeType: "video/mp4",
+          });
+          this.recorder.start();
+        } catch (error) {
+          alert(error);
+        }
       },
     },
     computed: {
