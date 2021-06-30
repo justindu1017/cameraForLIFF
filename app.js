@@ -85,6 +85,8 @@ app.post("/postStream", csrfProtection, (req, res) => {
     // initialize the filename of the mp4 file
     let fName = newFileName();
 
+    console.log(req.headers);
+
     if (req.headers.isIOS) {
       console.log("is IOS!!!");
       try {
@@ -98,6 +100,8 @@ app.post("/postStream", csrfProtection, (req, res) => {
         res.status(500).send({ error: error.toString() });
       }
     } else {
+      console.log("Tim Cook");
+
       try {
         // initialize a new streamBuffers.ReadableStreamBuffer, which will later be user
         // as input of fluent-ffmpeg
