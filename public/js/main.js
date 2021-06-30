@@ -44,6 +44,7 @@ $(function () {
               .post(
                 // "https://cameralifftest.us-south.cf.appdomain.cloud/postStream",
                 "https://f481ff969d17.ngrok.io/postStream",
+                // "http://localhost:8080/postStream",
 
                 this.reqInfo,
                 {

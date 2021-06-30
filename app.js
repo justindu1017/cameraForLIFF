@@ -85,9 +85,9 @@ app.post("/postStream", csrfProtection, (req, res) => {
     // initialize the filename of the mp4 file
     let fName = newFileName();
 
-    console.log(req.headers);
+    console.log(req.headers["isios"]);
 
-    if (req.headers.isIOS) {
+    if (req.headers["isios"]) {
       console.log("is IOS!!!");
       try {
         fs.appendFileSync(
