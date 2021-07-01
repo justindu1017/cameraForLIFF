@@ -88,6 +88,11 @@ app.post("/postStream", csrfProtection, (req, res) => {
     console.log(req.headers["isios"]);
 
     if (req.headers["isios"]) {
+      // if the user is using IOS as device
+      // due to the recording format is limited to mp4,
+      // would be faster to just save the data to
+      // a mp4 file
+
       console.log("is IOS!!!");
       try {
         fs.appendFileSync(
@@ -100,7 +105,7 @@ app.post("/postStream", csrfProtection, (req, res) => {
         res.status(500).send({ error: error.toString() });
       }
     } else {
-      console.log("Tim Cook");
+      console.log("not IOS");
 
       try {
         // initialize a new streamBuffers.ReadableStreamBuffer, which will later be user
@@ -234,13 +239,13 @@ function noFFmpegInstalled(data, fName) {
               `./ffmpeg -i ${__dirname}/backend/videos/${fName}.webm ${__dirname}/backend/videos/${fName}.mp4`,
               (err, stdout, stderr) => {
                 console.log("deleting...");
-                // unlink(`${__dirname}/backend/videos/${fName}.webm`)
-                //   .then((res) => {
-                //     resolve("succrss");
-                //   })
-                //   .catch((err) => {
-                //     reject(err);
-                //   });
+                fs.unlink(
+                  `${__dirname}/backend/videos/${fName}.webm`,
+                  (err) => {
+                    if (err) throw err;
+                    else resolve("success");
+                  }
+                );
               }
             );
           } catch (err) {
