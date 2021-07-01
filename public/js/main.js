@@ -42,9 +42,9 @@ $(function () {
 
             axios
               .post(
-                // "https://cameralifftest.us-south.cf.appdomain.cloud/postStream",
-                "https://f8857f23f000.ngrok.io/postStream",
-                // "http://localhost:8080/postStream",
+                // 請設置自己的網址/postStream
+                // "https://f8857f23f000.ngrok.io/postStream",
+                "/postStream",
 
                 this.reqInfo,
                 {
