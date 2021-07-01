@@ -42,8 +42,6 @@ $(function () {
 
             axios
               .post(
-                // 請設置自己的網址/postStream
-                // "https://f8857f23f000.ngrok.io/postStream",
                 "/postStream",
 
                 this.reqInfo,
