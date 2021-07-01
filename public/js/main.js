@@ -43,8 +43,8 @@ $(function () {
             axios
               .post(
                 // "https://cameralifftest.us-south.cf.appdomain.cloud/postStream",
-                "https://f8857f23f000.ngrok.io/postStream",
-                // "http://localhost:8080/postStream",
+                // "https://f8857f23f000.ngrok.io/postStream",
+                "http://localhost:8080/postStream",
 
                 this.reqInfo,
                 {
@@ -73,7 +73,7 @@ $(function () {
         this.recorder = new MediaRecorder(stream, {
           mimeType: "video/webm;codecs=h264",
         });
-        this.isIos = "false";
+        this.isIos = false;
 
         this.recorder.start();
       },
@@ -81,7 +81,7 @@ $(function () {
         this.recorder = new MediaRecorder(stream, {
           mimeType: "video/webm;codecs=vp8",
         });
-        this.isIos = "false";
+        this.isIos = false;
 
         this.recorder.start();
       },
@@ -90,7 +90,7 @@ $(function () {
           this.recorder = new MediaRecorder(stream, {
             mimeType: "video/mp4",
           });
-          this.isIos = "true";
+          this.isIos = true;
           this.recorder.start();
         } catch (error) {
           alert(error);

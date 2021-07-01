@@ -85,9 +85,9 @@ app.post("/postStream", csrfProtection, (req, res) => {
     // initialize the filename of the mp4 file
     let fName = newFileName();
 
-    console.log(typeof req.headers["isios"]);
+    console.log(req.headers["isios"]);
 
-    if (req.headers["isios"]) {
+    if (req.headers["isios"] === "true") {
       // if the user is using IOS as device
       // due to the recording format is limited to mp4,
       // would be faster to just save the data to

@@ -1,4 +1,4 @@
-a = "fff";
+a = "false";
 
-if (a === "fff") console.log("OKK");
+if (a) console.log("OKK");
 else console.log("nonono");
