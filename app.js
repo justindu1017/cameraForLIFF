@@ -85,7 +85,7 @@ app.post("/postStream", csrfProtection, (req, res) => {
     // initialize the filename of the mp4 file
     let fName = newFileName();
 
-    console.log(req.headers["isios"]);
+    console.log(typeof req.headers["isios"]);
 
     if (req.headers["isios"]) {
       // if the user is using IOS as device
